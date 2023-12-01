@@ -91,9 +91,47 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
+    start_node = Node(source, None, None)
+    path_finder = PathFinder(QueueFrontier(), start_node, target)
+    return path_finder.find_path()
 
-    # TODO
-    raise NotImplementedError
+
+class PathFinder:
+    def __init__(self, frontier, start_node, target):
+        self.frontier = frontier
+        self.frontier.add(start_node)
+        self.target = target
+        self.explored = set()
+
+    def find_path(self):
+        while not self.frontier.empty():
+            current_node = self.frontier.remove()
+            current_person = current_node.state
+
+            if current_person == self.target:
+                return self._resolve_path(current_node)
+
+            self.explored.add(current_person)
+            self._add_neighbors_to_frontier(current_node)
+
+        return None
+
+    def _resolve_path(self, node):
+        path = []
+        while node.parent:
+            path.append((node.action, node.state))
+            node = node.parent
+        path.reverse()
+        return path
+
+    def _add_neighbors_to_frontier(self, node):
+        for movie_id, neighbor_person_id in neighbors_for_person(node.state):
+            if self._is_unexplored(neighbor_person_id):
+                next_node = Node(neighbor_person_id, node, movie_id)
+                self.frontier.add(next_node)
+
+    def _is_unexplored(self, person_id):
+        return person_id not in self.explored and not self.frontier.contains_state(person_id)
 
 
 def person_id_for_name(name):
